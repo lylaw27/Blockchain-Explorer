@@ -1,199 +1,146 @@
 'use client'
-import useEthereum from "@/hooks/useEthereum";
-import {useEffect, useState} from "react";
+
+import {use, useEffect, useState} from "react";
 import startWebSocket from "@/hooks/websocket";
 import Switcher from "@/components/Switcher";
 import AssetInfo from "@/components/AssetInfo";
 import Navigation from "@/components/Navigation";
-import {Trade, Limit, UserInfo} from "@/Types/types";
+import {BlockDisplay, PeerStatus, TxDisplay} from "@/Types/types";
+import LeftArrow from "@/app/svg/arrow";
+import GreenStatus from "@/app/svg/greenStatus";
+import RedStatus from "@/app/svg/redStatus";
+import {useParams} from "next/navigation";
+import Link from "next/link";
+import {Truncate} from "@/components/HelperFunc";
 
-const Spacer = () =>{
-    return <div className="py-2"></div>
+
+export default function Home(){
+    const portNumber = 9090;
+    return(
+        <NodePage portNumber={portNumber}/>
+        )
 }
 
-const Card = ({children,title}) =>{
-    return (
-        <div className="p-6 bg-teal-400 rounded-xl">
-            <h1 className="text-grey-900 font-bold text-2xl mb-3 text-center">{title}</h1>
-            {children}
-        </div>
-    )
-}
 
+export function NodePage({portNumber}:{portNumber:number}) {
+    const [txList,setTxList] = useState<TxDisplay[]>([]);
+    const [peerList,setPeerList] = useState<PeerStatus[]>([]);
+    const [blockList,setBlockList] = useState<BlockDisplay[]>([]);
+    const [blockHeight,setBlockHeight] = useState<number>(-1);
+    const [nodeStatus,setNodeStatus] = useState<boolean>(true);
+    const [walletList,setWalletList] = useState<string[]>([]);
 
-const Orderbook = ({limits}:{limits: Limit[]}) =>{
-    const indents = [];
-    let i=0;
-    while(i<10 && i<limits.length){
-        indents.push(<div key={i} className="grid grid-cols-2 gap-4 place-items-center">
-            <div>
-                {limits[i].totalVolume}
-            </div>
-            <div>
-                {limits[i].price}
-            </div>
-        </div>)
-        i++;
+    const toggleStatus = async() => {
+        const status = await fetch(`http://127.0.0.1:8080/node/${portNumber}/status`,{
+            method:'POST'
+        }).then((res)=> res.text())
+        setNodeStatus((status === "true"));
     }
-    return indents;
-}
-
-const MarketTrades = ({trades}:{trades: Trade[]}) =>{
-    const indents = [];
-    let i=0;
-    while(i<10 && i<trades.length){
-        indents.push(<div key={i} className="grid grid-cols-2 gap-4 place-items-center">
-            <div>
-                {trades[i].price}
-            </div>
-            <div>
-                {trades[i].size}
-            </div>
-        </div>)
-        i++;
-    }
-    return indents;
-}
-
-export default function Home() {
-    const {provider,connect,address,balance, getBalance} = useEthereum();
-    const [asks,setAsks] = useState<Limit[]>([]);
-    const [buys,setBuys] = useState<Limit[]>([]);
-    const [trades,setTrades] = useState<Trade[]>();
-    const [orderSize,setOrderSize] = useState<string>("0");
-    const [orderPrice,setOrderPrice]  = useState<string>("0");
-    const [isLimit, setIsLimit] = useState(false);
-    const [userInfo, setUserInfo] = useState<UserInfo>();
 
     useEffect(() => {
-        connect()
-            .then((add)=> {
-                startWebSocket(add,setUserInfo,setAsks,setBuys,setTrades);
-            })
-            .then(getBalance);
-        // if(provider){
-        //     provider.on('block',getBalance);
-        // }
-    }, [address]);
-
-
-    const placeOrder = async(bid:boolean)=>{
-        const url = 'http://127.0.0.1:8080/order';
-        let orderType = "MARKET";
-        if(isLimit){
-            orderType = "LIMIT";
+        startWebSocket(portNumber,setWalletList,setTxList,setBlockList,setPeerList);
+    },  []);
+    useEffect(() => {
+        if(blockList.length>0){
+            setBlockHeight(blockList[0].height);
         }
-        const order = {
-            userId: address,
-            market: "ETH",
-            orderType: orderType,
-            price: orderPrice,
-            size: orderSize,
-            bid: bid
-        }
-        if(parseFloat(orderSize) <= 0){
-            alert("Please Enter Valid Amount");
-            return;
-        }
-        if(address == "" || address == undefined){
-            alert("Please First Connect Your Wallet");
-            return;
-        }
-        if(bid && balance < parseFloat(orderSize)*parseFloat(orderPrice)){
-            alert("Insufficient Funds!");
-            return;
-        }
-        if(userInfo == null || !bid && parseFloat(orderSize)>userInfo.shares){
-            alert("Insufficient Shares!");
-            return;
-        }
-        await fetch(url,{
-            method: 'POST',
-            headers:{
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(order)
-        }).then(()=>alert("Order Placed!"));
-    }
-
+    }, [blockList]);
+    
 
     return (
-      <div className="container mx-auto tex-2xl">
-        <Navigation connect={connect} address={address}/>
-          <div className="container mx-auto">
-              {trades == null || balance == null || userInfo == null ? <></> : <AssetInfo balance={balance} userInfo={userInfo} price={trades[0].price}/>}
-                  <div className="flex space-x-10">
-                      <Card title="Orderbook">
-                          <div className="flex">
-                              <div>
-                                  <h1 className="text-xl text-center">Buy Order</h1>
-                                  <div className="grid grid-cols-2 gap-4 p-2 place-items-center">
-                                      <div>
-                                          AMOUNT
-                                      </div>
-                                      <div>
-                                          PRICE
-                                      </div>
-                                  </div>
-                                  {
-                                      (buys === undefined || buys.length == 0 ? <div>Data Unavailable</div>: <Orderbook limits={buys}/>)
-                                  }
-                              </div>
-                              <div className="p-5"></div>
-                              <div>
-                                  <h1 className="text-xl text-center">Sell Order</h1>
-                                  <div className="grid grid-cols-2 gap-4 p-2 place-items-center">
-                                      <div>
-                                          AMOUNT
-                                      </div>
-                                      <div>
-                                          PRICE
-                                      </div>
-                                  </div>
-                                  {
-                                      (asks === undefined || asks.length == 0 ? <div>Data Unavailable</div>: <Orderbook limits={asks}/>)
-                                  }
-                              </div>
-                          </div>
-                      </Card>
-                      <Card title="Trades">
-                          <h1 className="text-xl text-center">
-                              Current Price: {(trades === undefined || trades.length == 0 ? <div>Data Unavailable</div>: <div> {trades[0].price}</div>)}
-                          </h1>
-                              <div className="grid grid-cols-2 gap-4 p-2 place-items-center">
-                                  <div>
-                                      PRICE
-                                  </div>
-                                  <div>
-                                      AMOUNT
-                                  </div>
-                              </div>
-                          {(trades === undefined || trades.length == 0 ? <div>Data Unavailable</div>: <MarketTrades trades={trades}/>)}
-                      </Card>
-                      <Card title="Place Order">
-                          <div>
-                              <div className="flex justify-center">
-                                  <div className="text-center p-3">Market Order</div><Switcher isLimit={isLimit} setIsLimit={setIsLimit}/><div className="text-center p-3">Limit Order</div>
-                              </div>
-                              <div className="flex items-center justify-end">
-                                  <div className="p-3">Amount:</div>
-                                      <input type="number" onChange={(e)=>setOrderSize(e.target.value)} className="w-2/3 py-2 px-4 bg-white rounded-xl appearance-none outline-none text-gray-900"/>
-                              </div>
-                              {isLimit ?
-                                  <div className="flex items-center justify-end">
-                                      <div className="p-3">Price:</div>
-                                      <input type="number" onChange={(e)=>setOrderPrice(e.target.value)} className="w-2/3 py-2 px-4 bg-white rounded-xl appearance-none outline-none text-gray-900"/>
-                                  </div>:<></>
-                              }
-                              <Spacer/>
-                              <div className="grid grid-cols-2 gap-4 place-items-center">
-                                  <button onClick={()=>placeOrder(true)} className="p-3 bg-blue-500 font-bold rounded-lg text-white">Buy</button>
-                                  <button onClick={()=>placeOrder(false)} className="p-3 bg-red-500 font-bold rounded-lg text-white">Sell</button>
-                              </div>
-                          </div>
-                      </Card>
-                  </div>
+      <div className="container mx-auto tex-2xl px-10">
+        <Navigation/>
+          <div className="rounded-xl space-x-10 m-auto w-1/2">
+              <h1 className="text-grey-900 font-bold text-3xl text-center pb-5">Node: {portNumber}</h1>
+              <div className="grid grid-cols-2 gap-3 justify-items-center">
+                  <div className="text-grey-900 font-bold text-xl">Status</div>
+                  <div className="text-grey-900 font-bold text-xl">Block Height</div>
+              </div>
+              <div className="grid grid-cols-2 gap-3 justify-items-center">
+                  {nodeStatus ?
+                      <div className="flex items-center"><GreenStatus/> <div className="px-2 text-xl">Online</div></div> :
+                      <div className="flex items-center"><RedStatus/> <div className="px-2 text-xl">Offline</div></div>}
+                  <div className="px-2 text-xl">{blockHeight}</div>
+              </div>
+              <div className="flex justify-center pt-5">
+              {nodeStatus ?
+                <button type="button" className="focus:outline-none text-white bg-red-700 hover:bg-red-800 focus:ring-4 focus:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900"
+                        onClick={toggleStatus}>Shutdown Node</button>:
+                <button  type="button" className="focus:outline-none text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800"
+                         onClick={toggleStatus}>Boot Up Node</button>
+              }
+              </div>
           </div>
+          <div className="flex container mx-auto flex-wrap gap-5 py-5">
+              <div className="space-x-10">
+                  <div className="p-6 bg-teal-400 rounded-xl flex-col justify-center">
+                      <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">Blockchain</h1>
+                        <div className="flex flex-wrap">
+                            {blockList.map((block,i)=>(
+                                <Link href={`/node/${portNumber}/block/${block.height}`} className="flex hover:underline" key={i}>
+                                    <div className="w-5 h-20 flex items-center">
+                                        <LeftArrow/>
+                                    </div>
+                                    <div className="flex-col justify-center">
+                                        <div className="rounded w-20 h-20 bg-gradient-to-tr from-lime-500 to-lime-300 hover:to-lime-500"></div>
+                                        <div className="text-center">#{block.height}</div>
+                                        <div className="text-center">{Truncate(block.blockHash)}</div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                  </div>
+              </div>
+              <div className="space-x-10">
+                  <div className="p-6 bg-teal-400 rounded-xl">
+                      <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">Peers</h1>
+                      <div className="grid grid-cols-2 gap-3 justify-items-center">
+                          <div className="text-grey-900 font-bold text-l">Nodes</div>
+                          <div className="text-grey-900 font-bold text-l">Status</div>
+                      </div>
+                      {peerList.map((peer, i) => (
+                          <Link href={`/node/${peer.node}`} className="grid grid-cols-2 gap-3 justify-items-center hover:underline" key={i}>
+                              <div>{peer.node}</div>
+                              {peer.status ?
+                                  <div className="flex items-center"><GreenStatus/>
+                                      <div className="px-2">Online</div>
+                                  </div> :
+                                  <div className="flex items-center"><RedStatus/>
+                                      <div className="px-2">Offline</div>
+                                  </div>}
+                          </Link>
+                      ))}
+                  </div>
+              </div>
+              <div className="space-x-10">
+                  <div className="p-6 bg-teal-400 rounded-xl">
+                      <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">Connected Wallets</h1>
+                      <div className="grid grid-cols-1 gap-3 justify-items-center">
+                          <div className="text-grey-900 font-bold text-l">Address</div>
+                      </div>
+                      {walletList.map((address, i) => (
+                          <Link href={`/node/${portNumber}/wallet/${address}`} className="grid grid-cols-1 gap-3 justify-items-center hover:underline" key={i}>
+                              <div>{Truncate(address)}</div>
+                          </Link>
+                      ))}
+                  </div>
+              </div>
+              <div className="space-x-10">
+                  <div className="p-6 bg-teal-400 rounded-xl">
+                      <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">MemPool</h1>
+                      <div className="grid grid-cols-2 gap-3 justify-items-center">
+                          <div className="text-grey-900 font-bold text-l">Unconfimred TXID</div>
+                          <div className="text-grey-900 font-bold text-l">Amount</div>
+                      </div>
+                      {txList.map((tx, i) => (
+                          <Link href={`/node/${portNumber}/transaction/${tx.txHash}`} className="grid grid-cols-2 gap-3 justify-items-center hover:underline" key={i}>
+                              <div>{Truncate(tx.txHash)}</div>
+                              <div>{tx.amount}</div>
+                          </Link>
+                      ))}
+                  </div>
+              </div>
+              </div>
       </div>
   );
 }

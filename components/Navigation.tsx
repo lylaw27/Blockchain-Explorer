@@ -1,4 +1,4 @@
-export default function Navigation({connect, address}) {
+export default function Navigation() {
     return (
         <div className="container mx-auto py-8">
             <div className="flex justify-between">
@@ -6,9 +6,9 @@ export default function Navigation({connect, address}) {
                     <a href="/">ExchangeGG</a>
                 </div>
                 <div className="flex space-x-6 align-middle">
-                    <a href={`/portfolio/${address}`}>portfolio</a>
+                    <a href={`/portfolio`}>portfolio</a>
                     <a>help</a>
-                    {address ? <div>{address}</div> : <button onClick={connect} className="p-3 bg-blue-500 font-bold rounded-lg text-white">Connect</button>}
+                    <button className="p-3 bg-blue-500 font-bold rounded-lg text-white">Connect</button>
                 </div>
             </div>
         </div>

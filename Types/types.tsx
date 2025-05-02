@@ -1,27 +1,54 @@
-export type Order = {
-    userId: string,
-    orderId: string,
-    size: number,
-    orderSize: number,
-    price: number,
-    timestamp: string,
-    bid: boolean,
-    filled: boolean,
+export type Transaction = {
+    inputs: TxInput[],
+    outputs: TxOutput[],
+    block: number | null
 }
 
-export type Limit = {
-    price: number;
-    totalVolume: number;
+export type TxInput = {
+    prevTxHash: string,
+    coinbase: boolean,
+    prevOutIndex: number,
+    signature: string,
+    publicKey:string
 }
 
-export type Trade = {
-    price: number;
-    size: number;
+export type TxOutput = {
+    amount: string,
+    address: string
 }
 
-export type UserInfo = {
-    shares: number;
-    fmv: number;
-    address: string;
-    orders: Order[];
+export type TxDisplay = {
+    txHash: string,
+    amount: number
+}
+
+export type Block = {
+    header: BlockHeader,
+    transactions: Transaction[]
+}
+
+export type PeerStatus = {
+    node: number,
+    status: boolean,
+}
+
+export type BlockHeader = {
+    prevHash: string,
+    merkleRoot: string,
+    nonce: number,
+    difficulty: number,
+    timestamp: number,
+    height: number
+}
+
+export type BlockDisplay = {
+    blockHash: string,
+    height: number
+}
+
+export type Wallet = {
+    address: string,
+    balance: number,
+    node: string,
+    txList: string[]
 }
