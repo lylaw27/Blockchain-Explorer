@@ -6,7 +6,7 @@ export type Transaction = {
 
 export type TxInput = {
     prevTxHash: string,
-    coinbase: boolean,
+    coinbase?: boolean,
     prevOutIndex: number,
     signature: string,
     publicKey:string
@@ -24,12 +24,15 @@ export type TxDisplay = {
 
 export type Block = {
     header: BlockHeader,
-    transactions: Transaction[]
+    transactions: Transaction[],
+    height: number
 }
 
-export type PeerStatus = {
-    node: number,
+export type Peer = {
+    node: string,
+    ip: string,
     status: boolean,
+    height: number
 }
 
 export type BlockHeader = {

@@ -1,45 +1,72 @@
 import {Client} from '@stomp/stompjs'
-import {createHash} from "node:crypto";
-import {BlockDisplay, BlockHeader, PeerStatus, Transaction, TxDisplay, Wallet} from "@/Types/types";
+import {Block, BlockDisplay, Peer, Transaction, TxDisplay, TxInput, TxOutput} from "@/Types/types";
 import {Hash} from "@/components/HelperFunc";
 
-
-const startWebSocket = (nodePort:number,setWalletList,setTxList,setBlockList,setPeerList) =>{
+const startWebSocket = (blockchainEndpoint,setWalletList,setTxList,setBlockList,setPeerList) =>{
 
     const client = new Client({
-        brokerURL: 'ws://localhost:8080/ws',
+        brokerURL: `ws://${blockchainEndpoint}/ws`,
         onConnect: ()=>{
-            client.subscribe(`/node/${nodePort}/transactions`, message =>{
+            client.subscribe(`/node/transactions`, message =>{
                 const responseArray = JSON.parse(message.body);
                 const txArray:TxDisplay[] = [];
                 responseArray.forEach((tx:Transaction)=>{
                     const amount = tx.outputs.reduce((sum,output)=>sum+parseInt(String(output.amount)),0);
-                    txArray.push({txHash: Hash(tx),amount: amount});
+                    const inputs:TxInput[] = [];
+                    const outputs:TxOutput[] = [];
+                    tx.inputs.forEach((input)=>{
+                        const txInput = {
+                            prevTxHash:input.prevTxHash,
+                            prevOutIndex: input.prevOutIndex,
+                            publicKey:input.publicKey,
+                            signature:input.signature,
+                        }
+                        inputs.push(txInput);
+                    })
+                    tx.outputs.forEach((output)=>{
+                        const txOutput = {
+                            amount:output.amount,
+                            address:output.address,
+                        }
+                        outputs.push(txOutput);
+                    })
+                    const txOrg = {
+                        inputs: inputs,
+                        outputs: outputs
+                    }
+                    console.log(txOrg)
+                    txArray.push({txHash: Hash(txOrg),amount: amount});
                 });
                 setTxList(txArray);
             });
 
-            client.subscribe(`/node/${nodePort}/blocks`, message =>{
+            client.subscribe(`/node/blocks`, message =>{
                 const responseArray = JSON.parse(message.body);
                 const blockArray:BlockDisplay[] = [];
-                responseArray.forEach((res)=>{
-                    blockArray.push({blockHash: Hash(res.header),height:res.height});
-                    console.log(Hash(res.header));
+                responseArray.forEach((block:Block)=>{
+                    const blockHeader = {
+                        prevHash: block.header.prevHash,
+                        merkleRoot: block.header.merkleRoot,
+                        timestamp: block.header.timestamp,
+                        nonce: block.header.nonce,
+                        difficulty: block.header.difficulty,
+                    }
+                    blockArray.push({blockHash: Hash(blockHeader),height:block.height});
                 })
                 setBlockList(blockArray);
             });
 
-            client.subscribe(`/node/${nodePort}/peers`, message =>{
+            client.subscribe(`/node/peers`, message =>{
                 const messageArray = JSON.parse(message.body);
-                const peerArray:PeerStatus[] = [];
-                messageArray.forEach((msg:PeerStatus)=>{
+                const peerArray:Peer[] = [];
+                messageArray.forEach((msg:Peer)=>{
                     const statusMsg = {...msg,status: msg.status === 'true'}
                     peerArray.push(statusMsg);
                 });
                 setPeerList(peerArray);
             })
 
-            client.subscribe(`/node/${nodePort}/wallets`, message =>{
+            client.subscribe(`/node/wallets`, message =>{
                 const messageArray = JSON.parse(message.body);
                 const walletArray:string[] = [];
                 messageArray.forEach((address:string)=>{

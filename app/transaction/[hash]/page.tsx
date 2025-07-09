@@ -11,14 +11,13 @@ import Link from "next/link";
 
 export default function TransactionPage() {
     const TxID = useParams().hash;
-    const port = useParams().port;
     const [tx,setTx] = useState<Transaction | null>();
     const [inputAmount,setInputAmount] = useState<number>();
     const [outputAmount,setOutputAmount] = useState<number>();
     const [fee,setFee] = useState<number>();
 
     const getInputAmount = async(prevTxID:string,prevOutIndex:number) =>{
-       const url = `http://127.0.0.1:8080/node/${port}/transaction/${prevTxID}`;
+       const url = `http://127.0.0.1:8080/transaction/${prevTxID}`;
        const res= await fetch(url,{method: 'GET'});
        if(!res.ok){
            return 0;
@@ -28,13 +27,13 @@ export default function TransactionPage() {
     }
 
     const getTxInfo = async() =>{
-        const url = `http://127.0.0.1:8080/node/${port}/transaction/${TxID}`;
+        const url = `http://127.0.0.1:8080/transaction/${TxID}`;
         const res= await fetch(url,{method: 'GET'});
-        if(!res.ok){
+        const txRes:Transaction = await res.json();
+        if(!res.ok || txRes.block == -2){
             setTx(null);
             return;
         }
-        const txRes:Transaction = await res.json();
         const totalOutput:number = txRes?.outputs.reduce((sum:number,output:TxOutput)=>sum+parseInt(String(output.amount)),0)
 
         const promises = txRes.inputs.map(async input => {
@@ -72,7 +71,7 @@ export default function TransactionPage() {
                 </div>
                 <div className="grid grid-cols-2 gap-3 justify-items-center">
                     <div className="px-2 text-xl">{outputAmount}</div>
-                    <div className="px-2 text-xl">{tx.block != -1 ? <Link className="hover:underline" href={`/node/${port}/block/${tx.block}`} >Confirmed by Block <div className="text-center">#{tx.block}</div></Link> : "Unconfirmed"}</div>
+                    <div className="px-2 text-xl">{tx.block != -1 ? <Link className="hover:underline" href={`/block/${tx.block}`} >Confirmed by Block <div className="text-center">#{tx.block}</div></Link> : "Unconfirmed"}</div>
                 </div>
             </div>
             <div className="flex container gap-5 py-5 justify-around">
@@ -94,7 +93,7 @@ export default function TransactionPage() {
                     <div className="p-6 bg-teal-400 rounded-xl mb-5 w-full" key={i}>
                         <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">{`Transaction Input ${i}`}</h1>
                             <div>
-                                <Link className="hover:underline" href={`/node/${port}/transaction/${input.prevTxHash}`}>
+                                <Link className="hover:underline" href={`/transaction/${input.prevTxHash}`}>
                                     <Field  title="Previous TxID" content={Truncate(input.prevTxHash)}/>
                                 </Link>
                                 <Field title="Output Index" content={input.prevOutIndex}/>
@@ -111,7 +110,7 @@ export default function TransactionPage() {
                             <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">{`Transaction Output ${i}`}</h1>
                             <div>
                                 <Field title="Amount" content={output.amount}/>
-                                <Link className="hover:underline" href={`/node/${port}/wallet/${output.address}`}>
+                                <Link className="hover:underline" href={`/wallet/${output.address}`}>
                                     <Field title="Address" content={Truncate(output.address)}/>
                                 </Link>
                             </div>

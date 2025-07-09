@@ -11,11 +11,10 @@ import {Field} from "@/components/Field";
 
 export default function BlockPage() {
     const blockHeight = useParams().height;
-    const port = useParams().port;
     const [block,setBlock] = useState<Block | null>();
 
     useEffect(() => {
-        const url = `http://127.0.0.1:8080/node/${port}/block/${blockHeight}`
+        const url = `http://127.0.0.1:8080/block/${blockHeight}`
         fetch(url,{
             method: 'GET'
         })
@@ -27,6 +26,7 @@ export default function BlockPage() {
         })
         .then(obj=>{
             setBlock(obj);
+            console.log(obj);
         }).catch(
             ()=> setBlock(null)
         );
@@ -55,7 +55,7 @@ export default function BlockPage() {
                         <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">Block Details</h1>
                         <Field title="Block Height" content={blockHeight}/>
                         <Field title="Block Hash" content={TruncateHash(block?.header)}/>
-                        <Link href={`/node/${port}/block/${blockHeight - 1}`} className="hover:underline">
+                        <Link href={`/block/${blockHeight - 1}`} className="hover:underline">
                             <Field title="Previous Block Hash" content={Truncate(block.header.prevHash)}/>
                         </Link>
                         <Field title="Merkle Root" content={Truncate(block?.header.merkleRoot)}/>
@@ -78,7 +78,7 @@ export default function BlockPage() {
                             <div className="text-grey-900 font-bold text-l">Amount</div>
                         </div>
                         {block?.transactions.map((tx, i) => (
-                            <Link href={`/node/${port}/transaction/${Hash(tx)}`} className="grid grid-cols-2 gap-3 justify-items-center hover:underline" key={i}>
+                            <Link href={`/transaction/${Hash(tx)}`} className="grid grid-cols-2 gap-3 justify-items-center hover:underline" key={i}>
                                 <div>{TruncateHash(tx)}</div>
                                 <div>{tx.outputs.reduce((sum,output)=>
                                     sum+parseInt(String(output.amount)),0)}</div>

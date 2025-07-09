@@ -35,7 +35,7 @@ export default function WalletPage() {
             return;
         }
         const promises = walletInfo.txList.map(async TxID => {
-            const txUrl = `http://127.0.0.1:8080/node/${walletInfo.node}/transaction/${TxID}`;
+            const txUrl = `http://127.0.0.1:8080/transaction/${TxID}`;
             const res = await fetch(txUrl, {method: 'GET'});
             return await res.json();
         })
@@ -166,7 +166,7 @@ export default function WalletPage() {
                     <div className="text-grey-900 font-bold text-l">Fee</div>
                 </div>
                 {txList.length != 0 && incomingOutputList.length === txList.length ? txList.map((tx, i) => (
-                    <Link href={`/node/${wallet.node}/transaction/${wallet.txList[i]}`}
+                    <Link href={`/transaction/${wallet.txList[i]}`}
                           className="grid place-items-center grid-cols-6 gap-6 justify-items-center hover:underline py-1" key={i}>
                         <div className="w-10">{checkTxType(i)}</div>
                         <div>{TruncateHash(tx)}</div>
