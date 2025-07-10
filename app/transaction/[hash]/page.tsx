@@ -10,14 +10,16 @@ import Link from "next/link";
 
 
 export default function TransactionPage() {
-    const TxID = useParams().hash;
+    const TxID= useParams().hash?.toString();
     const [tx,setTx] = useState<Transaction | null>();
     const [inputAmount,setInputAmount] = useState<number>();
     const [outputAmount,setOutputAmount] = useState<number>();
     const [fee,setFee] = useState<number>();
+    const mainnetIP = process.env.NEXT_PUBLIC_IP_ADDRESS;
+
 
     const getInputAmount = async(prevTxID:string,prevOutIndex:number) =>{
-       const url = `http://127.0.0.1:8080/transaction/${prevTxID}`;
+       const url = `http://${mainnetIP}/transaction/${prevTxID}`;
        const res= await fetch(url,{method: 'GET'});
        if(!res.ok){
            return 0;
@@ -27,7 +29,7 @@ export default function TransactionPage() {
     }
 
     const getTxInfo = async() =>{
-        const url = `http://127.0.0.1:8080/transaction/${TxID}`;
+        const url = `http://${mainnetIP}/transaction/${TxID}`;
         const res= await fetch(url,{method: 'GET'});
         const txRes:Transaction = await res.json();
         if(!res.ok || txRes.block == -2){

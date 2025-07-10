@@ -12,13 +12,14 @@ import MoneyIn from "@/app/svg/moneyIn";
 
 
 export default function WalletPage() {
-    const address = useParams().wallet;
+    const address = useParams().wallet?.toString();
     const [wallet,setWallet] = useState<Wallet | null>();
     const [incomingOutputList,setIncomingOutputList] = useState<TxOutput[][]>([[]]);
     const [txList,setTxList] = useState<Transaction[]>([]);
+    const mainnetIP = process.env.NEXT_PUBLIC_IP_ADDRESS;
 
     const getWalletInfo = async()=>{
-        const walletUrl = `http://127.0.0.1:8080/wallet/${address}`;
+        const walletUrl = `http://${mainnetIP}/wallet/${address}`;
         const walletRes = await fetch(walletUrl,{method:'GET'});
         if(!walletRes.ok){
             setWallet(null);
@@ -35,7 +36,7 @@ export default function WalletPage() {
             return;
         }
         const promises = walletInfo.txList.map(async TxID => {
-            const txUrl = `http://127.0.0.1:8080/transaction/${TxID}`;
+            const txUrl = `http://${mainnetIP}/transaction/${TxID}`;
             const res = await fetch(txUrl, {method: 'GET'});
             return await res.json();
         })
@@ -62,13 +63,13 @@ export default function WalletPage() {
     }
 
 
-    const getIncomingOutputs = async(tx:Transaction[],walletInfo:Wallet) =>{
+    const getIncomingOutputs = async(tx:Transaction[]) =>{
         const txPromises = tx.map(async (tx) => {
             const inputPromises = tx.inputs.map(async input => {
                 if(input.coinbase){
                     return {address: "Block Reward",amount: tx.outputs[0].amount}
                 }
-                const url = `http://127.0.0.1:8080/node/${walletInfo?.node}/transaction/${input.prevTxHash}`;
+                const url = `http://${mainnetIP}/transaction/${input.prevTxHash}`;
                 const res = await fetch(url, {method: 'GET'});
                 if (!res.ok) {
                     return {};
@@ -94,7 +95,7 @@ export default function WalletPage() {
 
     const computeAmount = (idx:number)=>{
         if(txList.length === 0 || incomingOutputList.length === 0){
-            return "Retrieving Data...";
+            return 0;
         }
         const outgoingAmount = txList[idx].outputs.reduce((sum, a) => {
             if(a.address === wallet?.address){
@@ -132,7 +133,7 @@ export default function WalletPage() {
             if(!walletInfo || !walletInfo.txList){return;}
             const tx = await getTxRecord(walletInfo);
             if(!tx){return;}
-            await getIncomingOutputs(tx,walletInfo);
+            await getIncomingOutputs(tx);
         }
         fetchData();
     },  []);

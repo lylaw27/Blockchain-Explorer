@@ -1,6 +1,6 @@
 import {createHash} from "node:crypto";
 
-export const Hash = (obj:any) =>{
+export const Hash = (obj:unknown) =>{
     if(obj == undefined){
         return "";
     }
@@ -11,7 +11,7 @@ export const Hash = (obj:any) =>{
     return createHash('sha256').update(objString).digest('hex');
 }
 
-export const Truncate = (hash:string | undefined ) =>{
+export const Truncate = (hash:string | undefined) =>{
     if(hash == undefined){
         return "";
     }
@@ -21,7 +21,7 @@ export const Truncate = (hash:string | undefined ) =>{
     return (hash.substring(0,4) + "-" + hash.substring(hash.length-4,hash.length)).toLowerCase();
 }
 
-export const TruncateHash = (obj:any) =>{
+export const TruncateHash = (obj:unknown) =>{
     if(obj == undefined){
         return "";
     }

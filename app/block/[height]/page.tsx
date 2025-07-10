@@ -10,11 +10,17 @@ import {Field} from "@/components/Field";
 
 
 export default function BlockPage() {
-    const blockHeight = useParams().height;
+    const params = useParams().height;
+    let blockHeight:string = "";
+    if(params){
+        blockHeight = params[0];
+    }
+
     const [block,setBlock] = useState<Block | null>();
+    const mainnetIP = process.env.NEXT_PUBLIC_IP_ADDRESS;
 
     useEffect(() => {
-        const url = `http://127.0.0.1:8080/block/${blockHeight}`
+        const url = `http://${mainnetIP}/block/${blockHeight}`
         fetch(url,{
             method: 'GET'
         })
@@ -55,7 +61,7 @@ export default function BlockPage() {
                         <h1 className="text-grey-900 font-bold text-2xl text-center pb-5">Block Details</h1>
                         <Field title="Block Height" content={blockHeight}/>
                         <Field title="Block Hash" content={TruncateHash(block?.header)}/>
-                        <Link href={`/block/${blockHeight - 1}`} className="hover:underline">
+                        <Link href={`/block/${parseInt(blockHeight) - 1}`} className="hover:underline">
                             <Field title="Previous Block Hash" content={Truncate(block.header.prevHash)}/>
                         </Link>
                         <Field title="Merkle Root" content={Truncate(block?.header.merkleRoot)}/>

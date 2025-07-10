@@ -116,7 +116,7 @@ export function NodePage() {
               </div>
               <div className="grid grid-cols-2 gap-3 justify-items-center">
                   {nodeId ?
-                      <div className="flex items-center"><GreenStatus/> <div className="px-2 text-xl">Online</div></div> :
+                      <div className="flex items-center"><GreenStatus/> <div className="px-2 text-xl">Online</div></div>:
                       <div className="flex items-center"><RedStatus/> <div className="px-2 text-xl">Offline</div></div>}
                   <div className="px-2 text-xl">{blockHeight}</div>
               </div>

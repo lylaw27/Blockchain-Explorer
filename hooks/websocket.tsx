@@ -1,8 +1,9 @@
 import {Client} from '@stomp/stompjs'
 import {Block, BlockDisplay, Peer, Transaction, TxDisplay, TxInput, TxOutput} from "@/Types/types";
 import {Hash} from "@/components/HelperFunc";
+import {Dispatch, SetStateAction} from "react";
 
-const startWebSocket = (blockchainEndpoint,setWalletList,setTxList,setBlockList,setPeerList) =>{
+const startWebSocket = (blockchainEndpoint:string | undefined,setWalletList:Dispatch<SetStateAction<string[]>> ,setTxList:Dispatch<SetStateAction<TxDisplay[]>>,setBlockList:Dispatch<SetStateAction<BlockDisplay[]>>,setPeerList:Dispatch<SetStateAction<Peer[]>>) =>{
 
     const client = new Client({
         brokerURL: `ws://${blockchainEndpoint}/ws`,
@@ -60,7 +61,7 @@ const startWebSocket = (blockchainEndpoint,setWalletList,setTxList,setBlockList,
                 const messageArray = JSON.parse(message.body);
                 const peerArray:Peer[] = [];
                 messageArray.forEach((msg:Peer)=>{
-                    const statusMsg = {...msg,status: msg.status === 'true'}
+                    const statusMsg = {...msg,status: msg.status}
                     peerArray.push(statusMsg);
                 });
                 setPeerList(peerArray);
