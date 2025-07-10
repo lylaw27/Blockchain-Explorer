@@ -1,14 +1,14 @@
-import {createHash} from "node:crypto";
+import {sha256} from "js-sha256";
 
 export const Hash = (obj:unknown) =>{
     if(obj == undefined){
         return "";
     }
     if(typeof obj === 'string'){
-        return createHash('sha256').update(obj).digest('hex');
+        return sha256(obj);
     }
     const objString = JSON.stringify(obj);
-    return createHash('sha256').update(objString).digest('hex');
+    return sha256(objString);
 }
 
 export const Truncate = (hash:string | undefined) =>{
@@ -26,5 +26,5 @@ export const TruncateHash = (obj:unknown) =>{
         return "";
     }
     const objString = JSON.stringify(obj);
-    return Truncate(createHash('sha256').update(objString).digest('hex'));
+    return Truncate(sha256(objString));
 }

@@ -10,15 +10,7 @@ import RedStatus from "@/app/svg/redStatus";
 import Link from "next/link";
 import {Truncate} from "@/components/HelperFunc";
 
-
-export default function Home(){
-    return(
-        <NodePage/>
-        )
-}
-
-
-export function NodePage() {
+export default function NodePage() {
     const [txList,setTxList] = useState<TxDisplay[]>([]);
     const [peerList,setPeerList] = useState<Peer[]>([]);
     const [blockList,setBlockList] = useState<BlockDisplay[]>([]);
