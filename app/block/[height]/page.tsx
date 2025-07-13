@@ -10,12 +10,8 @@ import {Field} from "@/components/Field";
 
 
 export default function BlockPage() {
-    const params = useParams().height;
-    let blockHeight:string = "";
-    if(params){
-        blockHeight = params[0];
-    }
-
+    let blockHeight = useParams().height?.toString();
+    blockHeight ??= "-1"
     const [block,setBlock] = useState<Block | null>();
     const mainnetIP = process.env.NEXT_PUBLIC_IP_ADDRESS;
 
@@ -32,7 +28,6 @@ export default function BlockPage() {
         })
         .then(obj=>{
             setBlock(obj);
-            console.log(obj);
         }).catch(
             ()=> setBlock(null)
         );

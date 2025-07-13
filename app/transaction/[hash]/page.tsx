@@ -10,7 +10,8 @@ import Link from "next/link";
 
 
 export default function TransactionPage() {
-    const TxID= useParams().hash?.toString();
+    let TxID= useParams().hash?.toString();
+    TxID ??= "";
     const [tx,setTx] = useState<Transaction | null>();
     const [inputAmount,setInputAmount] = useState<number>();
     const [outputAmount,setOutputAmount] = useState<number>();

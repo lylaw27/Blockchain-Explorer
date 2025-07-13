@@ -35,7 +35,6 @@ const startWebSocket = (blockchainEndpoint:string | undefined,setWalletList:Disp
                         inputs: inputs,
                         outputs: outputs
                     }
-                    console.log(txOrg)
                     txArray.push({txHash: Hash(txOrg),amount: amount});
                 });
                 setTxList(txArray);

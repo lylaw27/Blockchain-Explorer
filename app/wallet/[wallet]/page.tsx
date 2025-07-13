@@ -12,7 +12,8 @@ import MoneyIn from "@/app/svg/moneyIn";
 
 
 export default function WalletPage() {
-    const address = useParams().wallet?.toString();
+    let address = useParams().wallet?.toString();
+    address ??= "";
     const [wallet,setWallet] = useState<Wallet | null>();
     const [incomingOutputList,setIncomingOutputList] = useState<TxOutput[][]>([[]]);
     const [txList,setTxList] = useState<Transaction[]>([]);
@@ -46,16 +47,9 @@ export default function WalletPage() {
     }
 
     const checkTxType = (idx:number)=>{
-        console.log(txList[idx]);
         if(txList[idx].block == -1){
             return(<MoneyPending/>)
         }
-        // for(const txInput of txList[idx].inputs){
-        //     const address = Hash(txInput.publicKey);
-        //     if(address === wallet?.address){
-        //         return (<MoneyOut/>)
-        //     }
-        // }
         if(computeAmount(idx)<0){
             return (<MoneyOut/>)
         }

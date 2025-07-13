@@ -80,7 +80,6 @@ export default function NodePage() {
 
     const changeNode = (ip: string) =>{
         setBlockchainEndpoint(ip);
-        console.log(blockchainEndpoint);
     }
 
     useEffect(() => {
